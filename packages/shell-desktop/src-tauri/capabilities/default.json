@@ -1,0 +1,25 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capability for Shell Desktop",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "shell-cli",
+          "cmd": "shell",
+          "args": true
+        },
+        {
+          "name": "curl",
+          "cmd": "curl",
+          "args": true
+        }
+      ]
+    }
+  ]
+}

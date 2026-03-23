@@ -1,0 +1,31 @@
+{
+  "name": "@lamalibre/shell-e2e-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Shell E2E test infrastructure — local server/agent lifecycle, test execution",
+  "private": true,
+  "type": "module",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "Code Lama Software",
+  "main": "src/index.js",
+  "bin": {
+    "shell-e2e-mcp": "bin/shell-e2e-mcp.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "scripts": {
+    "start": "node src/index.js",
+    "build": "echo 'No build step for shell-e2e-mcp'"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "chalk": "^5.3.0",
+    "execa": "^9.6.1",
+    "listr2": "^8.0.0",
+    "zod": "^3.23.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
