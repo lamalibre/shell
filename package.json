@@ -1,0 +1,45 @@
+{
+  "name": "@lamalibre/shell",
+  "description": "Secure remote terminal via tmux — standalone and Portlama plugin",
+  "private": true,
+  "type": "module",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "Code Lama Software",
+  "homepage": "https://github.com/lamalibre/shell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lamalibre/shell.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lamalibre/shell/issues"
+  },
+  "keywords": [
+    "shell",
+    "remote-access",
+    "tmux",
+    "portlama",
+    "mTLS",
+    "terminal"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@9.15.3",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.4",
+    "@eslint/js": "^9.39.0",
+    "@types/node": "^25.5.0",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.0"
+  }
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+*.p12
+*.key
+*.pem
+*.csr
+.DS_Store
+*.log
+*.tgz
+coverage/
+.vite/
+target/
+.claude/

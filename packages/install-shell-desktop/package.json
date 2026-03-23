@@ -1,0 +1,37 @@
+{
+  "name": "@lamalibre/install-shell-desktop",
+  "version": "0.0.1",
+  "description": "Download and launch the Shell Desktop app",
+  "type": "module",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "author": "Code Lama Software",
+  "bin": {
+    "install-shell-desktop": "bin/install-shell-desktop.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lamalibre/shell.git",
+    "directory": "packages/install-shell-desktop"
+  },
+  "homepage": "https://github.com/lamalibre/shell#readme",
+  "bugs": {
+    "url": "https://github.com/lamalibre/shell/issues"
+  },
+  "keywords": [
+    "shell",
+    "desktop",
+    "tauri",
+    "terminal",
+    "installer"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "shell",
+  "displayName": "Shell",
+  "version": "0.1.0",
+  "description": "Secure remote terminal via tmux",
+  "capabilities": ["shell:connect"],
+  "packages": {
+    "server": "@lamalibre/shell-server",
+    "agent": "@lamalibre/shell-agent"
+  },
+  "panel": {
+    "pages": [
+      { "path": "/terminals", "title": "Terminals", "icon": "terminal" },
+      { "path": "/settings", "title": "Settings", "icon": "settings" }
+    ]
+  },
+  "config": {}
+}

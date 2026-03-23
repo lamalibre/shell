@@ -1,0 +1,41 @@
+{
+  "name": "@lamalibre/create-shell",
+  "version": "0.1.0",
+  "description": "npx installer for Shell — zero runtime dependencies, esbuild bundled",
+  "type": "module",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "Code Lama Software",
+  "homepage": "https://github.com/lamalibre/shell/tree/main/packages/create-shell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lamalibre/shell.git",
+    "directory": "packages/create-shell"
+  },
+  "bugs": {
+    "url": "https://github.com/lamalibre/shell/issues"
+  },
+  "keywords": [
+    "shell",
+    "installer",
+    "create",
+    "portlama"
+  ],
+  "bin": {
+    "create-shell": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "lint": "eslint src/"
+  },
+  "devDependencies": {
+    "@clack/prompts": "^0.10.0",
+    "esbuild": "^0.25.0",
+    "picocolors": "^1.1.1"
+  }
+}

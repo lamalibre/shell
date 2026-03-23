@@ -1,0 +1,154 @@
+{
+  "sections": [
+    {
+      "title": "Introduction",
+      "pages": [
+        {
+          "title": "What is Shell?",
+          "slug": "what-is-shell",
+          "file": "00-introduction/what-is-shell.md"
+        },
+        {
+          "title": "How It Works",
+          "slug": "how-it-works",
+          "file": "00-introduction/how-it-works.md"
+        },
+        {
+          "title": "Quick Start",
+          "slug": "quickstart",
+          "file": "00-introduction/quickstart.md"
+        }
+      ]
+    },
+    {
+      "title": "Concepts",
+      "pages": [
+        {
+          "title": "Deployment Modes",
+          "slug": "deployment-modes",
+          "file": "01-concepts/deployment-modes.md"
+        },
+        {
+          "title": "Security Model",
+          "slug": "security-model",
+          "file": "01-concepts/security-model.md"
+        },
+        {
+          "title": "tmux Sessions & Recording",
+          "slug": "tmux-sessions",
+          "file": "01-concepts/tmux-sessions.md"
+        },
+        {
+          "title": "WebSocket Relay",
+          "slug": "websocket-relay",
+          "file": "01-concepts/websocket-relay.md"
+        }
+      ]
+    },
+    {
+      "title": "Guides",
+      "pages": [
+        {
+          "title": "Standalone Setup",
+          "slug": "standalone-setup",
+          "file": "02-guides/standalone-setup.md"
+        },
+        {
+          "title": "Agent Enrollment",
+          "slug": "agent-enrollment",
+          "file": "02-guides/agent-enrollment.md"
+        },
+        {
+          "title": "Desktop App",
+          "slug": "desktop-app",
+          "file": "02-guides/desktop-app.md"
+        },
+        {
+          "title": "CLI Usage",
+          "slug": "cli-usage",
+          "file": "02-guides/cli-usage.md"
+        },
+        {
+          "title": "Managing Policies",
+          "slug": "managing-policies",
+          "file": "02-guides/managing-policies.md"
+        }
+      ]
+    },
+    {
+      "title": "Architecture",
+      "pages": [
+        {
+          "title": "System Overview",
+          "slug": "architecture-overview",
+          "file": "03-architecture/overview.md"
+        },
+        {
+          "title": "Shell Server",
+          "slug": "shell-server",
+          "file": "03-architecture/shell-server.md"
+        },
+        {
+          "title": "Shell Agent",
+          "slug": "shell-agent",
+          "file": "03-architecture/shell-agent.md"
+        },
+        {
+          "title": "State Management",
+          "slug": "state-management",
+          "file": "03-architecture/state-management.md"
+        }
+      ]
+    },
+    {
+      "title": "API Reference",
+      "pages": [
+        {
+          "title": "API Overview",
+          "slug": "api-overview",
+          "file": "04-api-reference/overview.md"
+        },
+        {
+          "title": "Config & Policies API",
+          "slug": "api-config-policies",
+          "file": "04-api-reference/config-policies.md"
+        },
+        {
+          "title": "Agents & Sessions API",
+          "slug": "api-agents-sessions",
+          "file": "04-api-reference/agents-sessions.md"
+        },
+        {
+          "title": "WebSocket Protocol",
+          "slug": "websocket-protocol",
+          "file": "04-api-reference/websocket-protocol.md"
+        }
+      ]
+    },
+    {
+      "title": "Reference",
+      "pages": [
+        {
+          "title": "Config Files",
+          "slug": "config-files",
+          "file": "05-reference/config-files.md"
+        },
+        {
+          "title": "Glossary",
+          "slug": "glossary",
+          "file": "05-reference/glossary.md"
+        }
+      ]
+    },
+    {
+      "title": "Coverage",
+      "pages": [
+        {
+          "title": "Desktop & CLI Coverage",
+          "slug": "desktop-cli-coverage",
+          "file": "06-coverage/desktop-cli-coverage.md"
+        }
+      ]
+    }
+  ]
+}

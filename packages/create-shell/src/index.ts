@@ -1,0 +1,10 @@
+export { runStandaloneSetup } from './lib/standalone-setup.js';
+export { runAgentSetup } from './lib/agent-setup.js';
+export type { AgentSetupOpts } from './lib/agent-setup.js';
+export { runTunnelSetup } from './lib/tunnel-setup.js';
+export { detectPlatform, detectTmux, detectExistingInstall, detectPortlama } from './lib/detect.js';
+export type { PortlamaConfig } from './lib/detect.js';
+export { createTunnel, createTunnelWithRetry } from './lib/portlama-api.js';
+export type { CreateTunnelResult } from './lib/portlama-api.js';
+export { generateLaunchdPlist, generateSystemdUnit, installService } from './lib/service.js';
+export type { LaunchdPlistOpts, SystemdUnitOpts, InstallServiceOpts } from './lib/service.js';
