@@ -1,19 +1,28 @@
 {
   "name": "shell",
   "displayName": "Shell",
-  "version": "0.1.0",
+  "version": "0.1.7",
   "description": "Secure remote terminal via tmux",
-  "capabilities": ["shell:connect"],
+  "capabilities": [
+    "shell:connect"
+  ],
   "packages": {
     "server": "@lamalibre/shell-server",
     "agent": "@lamalibre/shell-agent"
   },
   "panel": {
     "pages": [
-      { "path": "/terminals", "title": "Terminals", "icon": "terminal" },
-      { "path": "/settings", "title": "Settings", "icon": "settings" }
+      { "path": "agents", "title": "Agents", "icon": "users" },
+      { "path": "policies", "title": "Policies", "icon": "shield" },
+      { "path": "sessions", "title": "Sessions", "icon": "terminal" },
+      { "path": "recordings", "title": "Recordings", "icon": "video" },
+      { "path": "settings", "title": "Settings", "icon": "settings" }
     ]
   },
-  "modes": ["server", "agent", "local"],
+  "modes": [
+    "server",
+    "agent",
+    "local"
+  ],
   "config": {}
 }

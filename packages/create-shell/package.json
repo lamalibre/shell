@@ -1,6 +1,6 @@
 {
   "name": "@lamalibre/create-shell",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "npx installer for Shell — zero runtime dependencies, esbuild bundled",
   "type": "module",
   "license": "PolyForm-Noncommercial-1.0.0",

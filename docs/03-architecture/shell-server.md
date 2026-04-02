@@ -19,7 +19,9 @@ The server runs in two modes through a shared codebase:
 - Registers as a `fastify-plugin` inside Portlama
 - Delegates authentication to Portlama's mTLS middleware (`request.certRole`, `request.certLabel`)
 - Uses `DelegatingAgentRegistry` to read/write Portlama's agent records
+- Registers agent routes (agent-status, agent WebSocket) in addition to admin routes
 - Auto-registers `@fastify/websocket` if not already available
+- Declares panel pages in `portlama-plugin.json`: agents, policies, sessions, recordings, settings
 - No separate CA, API key, or HTTPS server
 
 Both modes register the same routes and relay logic. The difference is authentication and agent registry storage.
@@ -139,7 +141,7 @@ All input validated with Zod at the route level:
 | File | Lines | Purpose |
 | --- | --- | --- |
 | `src/standalone.ts` | ~370 | HTTPS server, CA, API key auth |
-| `src/plugin.ts` | ~71 | Portlama integration wrapper |
+| `src/plugin.ts` | ~103 | Portlama integration wrapper (admin + agent routes, health endpoint, token endpoint) |
 | `src/relay.ts` | ~1015 | WebSocket pairing, relay, file transfer, recordings |
 | `src/routes/*.ts` | ~400 | REST endpoint handlers |
 | `src/lib/shell.ts` | ~376 | Core business logic |

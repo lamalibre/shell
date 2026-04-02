@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { getSessions, terminateSession } from '../lib/api.js';
+  import { getShellClient } from '../context/client.svelte.js';
   import { formatDate, formatDuration } from '../lib/format.js';
   import type { ShellSessionEntry } from '../lib/types.js';
-  import Modal from '../components/Modal.svelte';
+  import ConfirmModal from '../components/ConfirmModal.svelte';
+
+  const client = getShellClient();
 
   let sessions = $state<ShellSessionEntry[]>([]);
   let error = $state('');
@@ -33,7 +35,7 @@
 
   async function loadData() {
     try {
-      const res = await getSessions();
+      const res = await client.getSessions();
       sessions = res.sessions;
       error = '';
     } catch (e) {
@@ -52,13 +54,13 @@
   function statusColor(status: string): string {
     switch (status) {
       case 'active':
-        return 'text-emerald-400';
+        return 'text-success';
       case 'completed':
-        return 'text-zinc-400';
+        return 'text-text-secondary';
       case 'pending':
-        return 'text-amber-400';
+        return 'text-warning';
       default:
-        return 'text-zinc-500';
+        return 'text-text-secondary';
     }
   }
 
@@ -70,7 +72,7 @@
   async function handleTerminate() {
     terminateLoading = true;
     try {
-      await terminateSession(terminateTarget);
+      await client.terminateSession(terminateTarget);
       showTerminateModal = false;
       await loadData();
     } catch (e) {
@@ -83,9 +85,9 @@
 
 <div class="space-y-4">
   <div class="flex items-center justify-between">
-    <h1 class="text-xl font-bold text-zinc-100">Sessions</h1>
+    <h1 class="text-xl font-bold text-text-primary">Sessions</h1>
     <button
-      class="rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700"
+      class="rounded-lg bg-card-hover px-3 py-1.5 text-sm text-text-primary hover:bg-border"
       onclick={loadData}
     >
       Refresh
@@ -98,11 +100,11 @@
       type="text"
       bind:value={searchQuery}
       placeholder="Search by agent or session ID..."
-      class="flex-1 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-100 placeholder-zinc-500"
+      class="flex-1 rounded border border-border bg-card px-3 py-1.5 text-sm text-text-primary placeholder-text-secondary"
     />
     <select
       bind:value={statusFilter}
-      class="rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-100"
+      class="rounded border border-border bg-card px-3 py-1.5 text-sm text-text-primary"
     >
       <option value="all">All</option>
       <option value="active">Active</option>
@@ -117,31 +119,31 @@
   {/if}
 
   {#if loading}
-    <div class="py-12 text-center text-zinc-500">Loading sessions...</div>
+    <div class="py-12 text-center text-text-secondary">Loading sessions...</div>
   {:else if sessions.length === 0}
-    <div class="py-12 text-center text-zinc-500">No sessions recorded yet.</div>
+    <div class="py-12 text-center text-text-secondary">No sessions recorded yet.</div>
   {:else if filteredSessions.length === 0}
-    <div class="py-12 text-center text-zinc-500">No sessions match the current filter.</div>
+    <div class="py-12 text-center text-text-secondary">No sessions match the current filter.</div>
   {:else}
-    <div class="overflow-x-auto rounded-xl border border-zinc-800">
+    <div class="overflow-x-auto rounded-xl border border-border">
       <table class="w-full text-left text-sm">
         <thead>
-          <tr class="border-b border-zinc-800 bg-zinc-900/80">
-            <th class="px-4 py-3 font-medium text-zinc-400">Agent</th>
-            <th class="px-4 py-3 font-medium text-zinc-400">Source IP</th>
-            <th class="px-4 py-3 font-medium text-zinc-400">Started</th>
-            <th class="px-4 py-3 font-medium text-zinc-400">Duration</th>
-            <th class="px-4 py-3 font-medium text-zinc-400">Status</th>
-            <th class="px-4 py-3 font-medium text-zinc-400"></th>
+          <tr class="border-b border-border bg-card">
+            <th class="px-4 py-3 font-medium text-text-secondary">Agent</th>
+            <th class="px-4 py-3 font-medium text-text-secondary">Source IP</th>
+            <th class="px-4 py-3 font-medium text-text-secondary">Started</th>
+            <th class="px-4 py-3 font-medium text-text-secondary">Duration</th>
+            <th class="px-4 py-3 font-medium text-text-secondary">Status</th>
+            <th class="px-4 py-3 font-medium text-text-secondary"></th>
           </tr>
         </thead>
         <tbody>
           {#each filteredSessions as session}
-            <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/30">
-              <td class="px-4 py-3 font-mono text-zinc-200">{session.agentLabel}</td>
-              <td class="px-4 py-3 font-mono text-zinc-400">{session.sourceIp}</td>
-              <td class="px-4 py-3 text-zinc-400">{formatDate(session.startedAt)}</td>
-              <td class="px-4 py-3 text-zinc-400">{formatDuration(session.duration ?? null)}</td>
+            <tr class="border-b border-border/50 hover:bg-card/30">
+              <td class="px-4 py-3 font-mono text-text-primary">{session.agentLabel}</td>
+              <td class="px-4 py-3 font-mono text-text-secondary">{session.sourceIp}</td>
+              <td class="px-4 py-3 text-text-secondary">{formatDate(session.startedAt)}</td>
+              <td class="px-4 py-3 text-text-secondary">{formatDuration(session.duration ?? null)}</td>
               <td class="px-4 py-3 {statusColor(session.status)}">{session.status}</td>
               <td class="px-4 py-3">
                 {#if session.status === 'active'}
@@ -162,25 +164,14 @@
 </div>
 
 {#if showTerminateModal}
-  <Modal title="Terminate Session" onclose={() => (showTerminateModal = false)}>
-    <p class="text-sm text-zinc-300">
-      Are you sure you want to terminate session <strong class="font-mono text-xs">{terminateTarget}</strong>?
-      The active terminal connection will be closed immediately.
-    </p>
-    <div class="mt-6 flex justify-end gap-3">
-      <button
-        class="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
-        onclick={() => (showTerminateModal = false)}
-      >
-        Cancel
-      </button>
-      <button
-        class="rounded-lg bg-red-700 px-4 py-2 text-sm text-white hover:bg-red-600 disabled:opacity-50"
-        onclick={handleTerminate}
-        disabled={terminateLoading}
-      >
-        {terminateLoading ? 'Terminating...' : 'Terminate'}
-      </button>
-    </div>
-  </Modal>
+  <ConfirmModal
+    title="Terminate Session"
+    confirmLabel={terminateLoading ? 'Terminating...' : 'Terminate'}
+    loading={terminateLoading}
+    onconfirm={handleTerminate}
+    onclose={() => (showTerminateModal = false)}
+  >
+    Are you sure you want to terminate session <strong class="font-mono text-xs">{terminateTarget}</strong>?
+    The active terminal connection will be closed immediately.
+  </ConfirmModal>
 {/if}

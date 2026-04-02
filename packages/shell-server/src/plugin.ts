@@ -9,7 +9,9 @@ import enableRoutes from './routes/enable.js';
 import sessionRoutes from './routes/sessions.js';
 import agentStatusRoutes from './routes/agent-status.js';
 import fileRoutes from './routes/files.js';
+import agentRoutes from './routes/agents.js';
 import shellRelay from './relay.js';
+import { createJoinToken } from './cert/token.js';
 
 export interface ShellPluginOpts {
   stateDir: string;
@@ -44,8 +46,12 @@ async function shellPlugin(fastify: FastifyInstance, opts: ShellPluginOpts): Pro
 
   const getAuth = (request: FastifyRequest): AuthInfo => {
     const req = request as unknown as { certRole?: string; certLabel?: string };
+    const role = req.certRole;
+    if (!role || (role !== 'admin' && role !== 'agent')) {
+      throw new Error('Missing or invalid certificate role on request');
+    }
     return {
-      role: (req.certRole as 'admin' | 'agent') ?? 'admin',
+      role,
       label: req.certLabel ?? null,
     };
   };
@@ -64,7 +70,7 @@ async function shellPlugin(fastify: FastifyInstance, opts: ShellPluginOpts): Pro
   // Ensure @fastify/websocket is available
   if (!fastify.hasDecorator('websocketServer')) {
     const ws = await import('@fastify/websocket');
-    await fastify.register(ws.default);
+    await fastify.register(ws.default, { options: { maxPayload: 1024 * 1024 } });
   }
 
   const routeOpts = { ctx, requireRole };
@@ -76,6 +82,32 @@ async function shellPlugin(fastify: FastifyInstance, opts: ShellPluginOpts): Pro
   await fastify.register(sessionRoutes, routeOpts);
   await fastify.register(agentStatusRoutes, routeOptsWithAuth);
   await fastify.register(fileRoutes, routeOpts);
+  await fastify.register(agentRoutes, routeOpts);
+
+  // Health endpoint (public, no auth required)
+  fastify.get('/health', async () => {
+    return { status: 'ok' };
+  });
+
+  // Token creation endpoint (admin-only — needed by panel microfrontend)
+  const TokensBodySchema = z.object({
+    label: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
+    ttlMinutes: z.number().int().min(1).max(1440).optional(),
+  });
+
+  fastify.post(
+    '/tokens',
+    { preHandler: requireRole(['admin']) },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const parsed = TokensBodySchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.code(400).send({ error: parsed.error.message });
+      }
+      const token = await createJoinToken(opts.stateDir, parsed.data.label, parsed.data.ttlMinutes);
+      return token;
+    },
+  );
+
   await fastify.register(shellRelay, routeOptsWithAuth);
 }
 

@@ -10,8 +10,11 @@
   },
   "panel": {
     "pages": [
-      { "path": "/terminals", "title": "Terminals", "icon": "terminal" },
-      { "path": "/settings", "title": "Settings", "icon": "settings" }
+      { "path": "agents", "title": "Agents", "icon": "users" },
+      { "path": "policies", "title": "Policies", "icon": "shield" },
+      { "path": "sessions", "title": "Sessions", "icon": "terminal" },
+      { "path": "recordings", "title": "Recordings", "icon": "video" },
+      { "path": "settings", "title": "Settings", "icon": "settings" }
     ]
   },
   "config": {}

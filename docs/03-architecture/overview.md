@@ -72,9 +72,13 @@ These three pieces interact through a clear lifecycle: the admin enrolls an agen
 │  └── ~/.shell-cli/config.json    │
 │                                  │
 │  shell-desktop (Tauri v2)        │
+│  ├── Delegates to ShellApp       │
+│  │   from shell-panel            │
 │  ├── Agents tab (enable/connect) │
 │  ├── Policies tab (CRUD)         │
 │  ├── Sessions tab (audit log)    │
+│  ├── Recordings tab (playback)   │
+│  ├── Settings tab (preferences)  │
 │  └── ~/.shell-desktop/config.json│
 └──────────────────────────────────┘
 ```
@@ -86,7 +90,8 @@ These three pieces interact through a clear lifecycle: the admin enrolls an agen
 | **Shell Server** | Fastify 5, node-forge, Zod | WebSocket relay, REST API, certificate authority, agent registry |
 | **Shell Agent** | Node.js ESM, tmux, execa | Terminal session manager, output capture, session recording |
 | **Shell CLI** | @clack/prompts, picocolors | Admin command-line interface |
-| **Shell Desktop** | Tauri v2, Svelte 5, Tailwind | Admin graphical interface |
+| **Shell Panel** | Svelte 5, Tailwind v4 | Shared UI component library (pages, components, API client) |
+| **Shell Desktop** | Tauri v2, Svelte 5, Tailwind v4 | Admin graphical interface (imports pages from shell-panel) |
 | **Create Shell** | esbuild bundled, zero deps | One-command installer for server and agent |
 | **Shell E2E MCP** | MCP SDK, Multipass | E2E test infrastructure (VM provisioning, test orchestration) |
 
@@ -127,8 +132,14 @@ shell/
 │   │       ├── commands/          ← connect, enable, disable, sessions, recordings, config, policies
 │   │       └── lib/               ← API client, config loader
 │   │
-│   ├── shell-desktop/             ← Tauri v2 desktop app
-│   │   ├── src/                   ← Svelte 5 frontend (pages, components, lib)
+│   ├── shell-panel/               ← Shared Svelte 5 UI component library
+│   │   └── src/
+│   │       ├── pages/             ← Agents, Policies, Sessions, Recordings, Settings
+│   │       ├── components/        ← Reusable UI components
+│   │       └── lib/               ← API client helpers
+│   │
+│   ├── shell-desktop/             ← Tauri v2 desktop app (imports pages from shell-panel)
+│   │   ├── src/                   ← Svelte 5 frontend (app shell, routing)
 │   │   └── src-tauri/src/         ← Rust backend (Tauri commands, curl wrapper, config)
 │   │
 │   ├── create-shell/              ← npx installer

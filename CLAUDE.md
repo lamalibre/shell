@@ -10,7 +10,8 @@ shell/
 │   ├── shell-server/       # Fastify server (standalone + Portlama plugin mode)
 │   ├── shell-agent/        # Agent daemon (tmux session manager)
 │   ├── shell-cli/          # CLI tool
-│   ├── shell-desktop/      # Tauri v2 desktop app
+│   ├── shell-panel/        # Shared Svelte 5 UI component library (pages, components, API client)
+│   ├── shell-desktop/      # Tauri v2 desktop app (imports pages from shell-panel)
 │   └── create-shell/       # npx installer (zero deps, esbuild bundled)
 ├── tests/
 │   └── e2e/               # Single-node E2E tests
@@ -24,7 +25,8 @@ shell/
 | ------------ | ----------------------------------------- |
 | Server       | Fastify 5, Zod validation, WebSocket (ws) |
 | Agent        | Node.js ESM, tmux CLI, execa              |
-| Desktop      | Tauri v2, Svelte, Tailwind                |
+| Panel UI     | Svelte 5, Tailwind v4 (shared component library) |
+| Desktop      | Tauri v2, Svelte 5, Tailwind v4           |
 | CLI          | @clack/prompts, picocolors                |
 | Certificates | node-forge (CA generation, mTLS)          |
 | Installer    | esbuild bundled, zero runtime deps        |

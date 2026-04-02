@@ -1,11 +1,22 @@
 import { build } from 'esbuild';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const packageDir = process.cwd();
 const pkg = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf-8'));
 
-// Build panel microfrontend bundle if the package has one
+// Sync version from package.json into portlama-plugin.json (single source of truth)
+const pluginManifestPath = resolve(packageDir, 'portlama-plugin.json');
+if (existsSync(pluginManifestPath)) {
+  const manifest = JSON.parse(readFileSync(pluginManifestPath, 'utf-8'));
+  if (manifest.version !== pkg.version) {
+    manifest.version = pkg.version;
+    writeFileSync(pluginManifestPath, JSON.stringify(manifest, null, 2) + '\n');
+    console.log(`Synced portlama-plugin.json version → ${pkg.version}`);
+  }
+}
+
+// Build panel microfrontend bundle if the package has a local panel.ts
 const panelEntry = resolve(packageDir, 'src/panel.ts');
 if (existsSync(panelEntry)) {
   await build({
@@ -19,4 +30,19 @@ if (existsSync(panelEntry)) {
     sourcemap: false,
   });
   console.log(`Built ${pkg.name} → dist/panel.js`);
+}
+
+// Copy panel.js from @lamalibre/shell-panel if this package depends on it
+// and doesn't have its own panel.ts (shell-server uses shell-panel's output)
+if (!existsSync(panelEntry) && pkg.dependencies?.['@lamalibre/shell-panel']) {
+  const { createRequire } = await import('node:module');
+  const require = createRequire(resolve(packageDir, 'package.json'));
+  try {
+    const panelPkg = resolve(require.resolve('@lamalibre/shell-panel/panel.js'));
+    mkdirSync(resolve(packageDir, 'dist'), { recursive: true });
+    copyFileSync(panelPkg, resolve(packageDir, 'dist/panel.js'));
+    console.log(`Copied panel.js from @lamalibre/shell-panel → dist/panel.js`);
+  } catch {
+    console.log('Note: @lamalibre/shell-panel panel.js not found — build shell-panel first');
+  }
 }

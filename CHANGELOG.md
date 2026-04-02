@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Shared Svelte 5 panel package (`@lamalibre/shell-panel` 0.1.0) — pages, components, API client used by both desktop app and Portlama plugin
+- Full microfrontend panel with 5 interactive pages: Agents, Policies, Sessions, Recordings, Settings (replaces read-only vanilla JS panel)
+- `DesktopActionModal` component for actions requiring the desktop app — shows copyable terminal command and install button (`npx @lamalibre/install-shell-desktop`)
+- Agent listing and token creation endpoints in plugin mode (previously standalone-only)
+- Health endpoint in plugin mode for panel connectivity checks
+
+### Changed
+
+- Upgrade desktop app from Tailwind CSS v3 to v4 with OKLCH theme tokens
+- Desktop app imports shared pages from `@lamalibre/shell-panel` instead of bundling its own
+- Desktop sidebar now uses lucide-svelte icons for all 5 navigation tabs
+- Replace vanilla JS panel (435 lines, read-only) with Svelte 5 IIFE microfrontend (133KB bundle)
+- Build script syncs version from `package.json` into `portlama-plugin.json` and copies panel bundle
+- Panel pages updated in `portlama-plugin.json`: agents, policies, sessions, recordings, settings
+
+### Security
+
+- Fix plugin mode `getAuth` to fail closed when certificate role is absent (previously defaulted to admin)
+- Set WebSocket `maxPayload` to 1MB in plugin mode (previously unbounded)
+- Replace `{@html}` in confirmation modals with Svelte snippet children (prevents XSS)
+
+**Affected packages:** `@lamalibre/shell-panel` (new, 0.1.0), `@lamalibre/shell-server` (0.1.6 → 0.1.7), `@lamalibre/shell-desktop` (0.1.0 → 0.1.1), `@lamalibre/create-shell` (0.1.1 → 0.1.2)
+
+### Added
+
 - VM-based E2E test MCP server (`shell-e2e-mcp`) for local server/agent lifecycle testing
 - Documentation redesign matching Portlama style (24 files across 6 sections)
 - Zod error handler for structured API validation errors

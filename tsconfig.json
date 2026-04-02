@@ -4,6 +4,7 @@
     { "path": "packages/shell-server" },
     { "path": "packages/shell-agent" },
     { "path": "packages/shell-cli" },
-    { "path": "packages/create-shell" }
+    { "path": "packages/create-shell" },
+    { "path": "packages/shell-panel" }
   ]
 }

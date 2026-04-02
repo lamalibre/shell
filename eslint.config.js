@@ -5,7 +5,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['**/node_modules/', '**/dist/', '**/coverage/', '**/target/', '.claude/'],
+    ignores: ['**/node_modules/', '**/dist/', '**/coverage/', '**/target/', '.claude/', 'website/'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -26,6 +26,12 @@ export default [
     rules: {
       'no-empty': ['error', { allowEmptyCatch: true }],
       'no-control-regex': 'off',
+    },
+  },
+  {
+    files: ['scripts/**/*.mjs', 'packages/*/scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node },
     },
   },
   prettierConfig,

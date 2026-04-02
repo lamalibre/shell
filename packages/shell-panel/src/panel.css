@@ -1,3 +1,6 @@
+/* Microfrontend CSS: include preflight for border/box-model resets that
+   Tailwind utilities depend on. Both hosts (portlama-desktop, shell-desktop)
+   also use Tailwind preflight so there's no conflict. */
 @import 'tailwindcss';
 
 @theme {
@@ -12,28 +15,4 @@
   --color-success: oklch(0.723 0.191 149.579);
   --color-warning: oklch(0.795 0.184 86.047);
   --color-error: oklch(0.637 0.237 25.331);
-}
-
-html, body, #app {
-  height: 100%;
-  margin: 0;
-  background-color: var(--color-surface);
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-card-hover);
 }

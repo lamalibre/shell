@@ -1,16 +1,22 @@
 # Desktop App
 
-> The shell desktop app provides a graphical interface for managing agents, policies, and sessions — built with Tauri v2 and Svelte 5.
+> The shell desktop app provides a graphical interface for managing agents, policies, sessions, recordings, and settings — built with Tauri v2 and Svelte 5.
 
 ## Overview
 
-The desktop app is an alternative to the CLI for managing shell access. It connects to the shell server's REST API and provides a three-tab interface:
+The desktop app is an alternative to the CLI for managing shell access. It connects to the shell server's REST API and provides a multi-tab interface:
 
 - **Agents** — list agents, enable/disable access, connect to sessions
 - **Policies** — create and manage access policies
 - **Sessions** — view the session audit log
+- **Recordings** — browse and play back session recordings
+- **Settings** — configure server connection and preferences
 
-The app runs natively on macOS (and Linux) via Tauri v2, using a Rust backend for HTTP calls and a Svelte 5 frontend for the UI.
+The app runs natively on macOS (and Linux) via Tauri v2, using a Rust backend for HTTP calls and a Svelte 5 frontend styled with Tailwind v4.
+
+### Shared Panel Architecture
+
+The desktop app imports its page components from the `shell-panel` package — a shared Svelte 5 UI component library that provides pages, reusable components, and API client helpers. This means the same UI is used by both the desktop app and the Portlama panel (a self-registering IIFE loaded by the Portlama host, not served by the shell server). The desktop app provides the app shell and routing; `shell-panel` provides the page content.
 
 ## Installation
 
@@ -87,10 +93,18 @@ The table auto-refreshes every 10 seconds.
 
 ```
 ┌────────────────────────────────┐
-│  Svelte 5 Frontend             │
-│  ├── Agents.svelte             │
-│  ├── Policies.svelte           │
-│  └── Sessions.svelte           │
+│  Desktop App Shell (Svelte 5)  │
+│  ├── Routing + layout          │
+│  └── Tauri-specific wiring     │
+│           │                    │
+│           │ imports pages      │
+│           ▼                    │
+│  shell-panel (shared library)  │
+│  ├── AgentsPage.svelte         │
+│  ├── PoliciesPage.svelte       │
+│  ├── SessionsPage.svelte       │
+│  ├── RecordingsPage.svelte     │
+│  └── SettingsPage.svelte       │
 │           │                    │
 │           │ invoke()           │
 │           ▼                    │
@@ -101,7 +115,8 @@ The table auto-refreshes every 10 seconds.
 │  ├── get_shell_sessions()      │
 │  └── check_health()           │
 │           │                    │
-│           │ curl (via execa)   │
+│           │ curl (via std::    │
+│           │ process::Command)  │
 │           ▼                    │
 │  Shell Server REST API         │
 └────────────────────────────────┘

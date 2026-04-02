@@ -1,16 +1,19 @@
 <script lang="ts">
-  import {
-    getAgents,
-    enableAgentShell,
-    disableAgentShell,
-    getPolicies,
-    createJoinToken,
-    revokeAgent,
-  } from '../lib/api.js';
+  import { getShellClient } from '../context/client.svelte.js';
   import { formatTimeRemaining } from '../lib/format.js';
   import type { ShellAgent, ShellPolicy } from '../lib/types.js';
   import Modal from '../components/Modal.svelte';
-  import { Command } from '@tauri-apps/plugin-shell';
+  import ConfirmModal from '../components/ConfirmModal.svelte';
+  import DesktopActionModal from '../components/DesktopActionModal.svelte';
+
+  interface Props {
+    mode?: 'desktop' | 'panel' | undefined;
+    onconnect?: ((label: string) => void) | undefined;
+  }
+
+  let { mode = 'panel', onconnect }: Props = $props();
+
+  const client = getShellClient();
 
   let agents = $state<ShellAgent[]>([]);
   let policies = $state<ShellPolicy[]>([]);
@@ -41,6 +44,11 @@
   let tokenLoading = $state(false);
   let tokenCopied = $state(false);
 
+  // Desktop action modal (for panel mode)
+  let showDesktopActionModal = $state(false);
+  let desktopActionTitle = $state('');
+  let desktopActionCommand = $state('');
+
   // Revoke confirmation modal
   let showRevokeModal = $state(false);
   let revokeTarget = $state('');
@@ -59,7 +67,7 @@
 
   async function loadData() {
     try {
-      const [agentRes, policyRes] = await Promise.all([getAgents(), getPolicies()]);
+      const [agentRes, policyRes] = await Promise.all([client.getAgents(), client.getPolicies()]);
       agents = agentRes.agents;
       policies = policyRes.policies;
       error = '';
@@ -139,16 +147,14 @@
     enableLoading = true;
     try {
       if (enableTarget) {
-        // Single agent enable
-        await enableAgentShell(enableTarget, enableDuration, enablePolicy || undefined);
+        await client.enableAgentShell(enableTarget, enableDuration, enablePolicy || undefined);
       } else {
-        // Bulk enable
         bulkLoading = true;
         const labels = [...selectedLabels];
         for (let i = 0; i < labels.length; i++) {
           const label = labels[i]!;
           bulkProgress = `Enabling ${i + 1}/${labels.length}: ${label}`;
-          await enableAgentShell(label, enableDuration, enablePolicy || undefined);
+          await client.enableAgentShell(label, enableDuration, enablePolicy || undefined);
         }
         bulkProgress = '';
         bulkLoading = false;
@@ -167,7 +173,7 @@
 
   async function handleDisable(label: string) {
     try {
-      await disableAgentShell(label);
+      await client.disableAgentShell(label);
       await loadData();
     } catch (e) {
       error = String(e);
@@ -181,7 +187,7 @@
       for (let i = 0; i < labels.length; i++) {
         const label = labels[i]!;
         bulkProgress = `Disabling ${i + 1}/${labels.length}: ${label}`;
-        await disableAgentShell(label);
+        await client.disableAgentShell(label);
       }
       selectedLabels = new Set();
       await loadData();
@@ -193,12 +199,13 @@
     }
   }
 
-  async function handleConnect(label: string) {
-    try {
-      const cmd = Command.create('shell-cli', ['connect', label]);
-      await cmd.spawn();
-    } catch (e) {
-      error = `Failed to launch shell connect: ${String(e)}`;
+  function handleConnect(label: string) {
+    if (mode === 'desktop' && onconnect) {
+      onconnect(label);
+    } else {
+      desktopActionTitle = 'Connect to Agent';
+      desktopActionCommand = `shell-cli connect ${label}`;
+      showDesktopActionModal = true;
     }
   }
 
@@ -215,7 +222,7 @@
     tokenLoading = true;
     tokenCopied = false;
     try {
-      const res = await createJoinToken(tokenLabel);
+      const res = await client.createJoinToken(tokenLabel);
       joinToken = res.token;
       showCreateTokenModal = false;
       showTokenModal = true;
@@ -232,7 +239,6 @@
       await navigator.clipboard.writeText(joinToken);
       tokenCopied = true;
     } catch {
-      // Fallback: select the text for manual copy
       const input = document.getElementById('join-token-display') as HTMLInputElement | null;
       if (input) {
         input.select();
@@ -248,7 +254,7 @@
   async function handleRevoke() {
     revokeLoading = true;
     try {
-      await revokeAgent(revokeTarget);
+      await client.revokeAgent(revokeTarget);
       showRevokeModal = false;
       await loadData();
     } catch (e) {
@@ -261,16 +267,16 @@
 
 <div class="space-y-4">
   <div class="flex items-center justify-between">
-    <h1 class="text-xl font-bold text-zinc-100">Agents</h1>
+    <h1 class="text-xl font-bold text-text-primary">Agents</h1>
     <div class="flex items-center gap-2">
       <button
-        class="rounded-lg bg-cyan-900/50 px-3 py-1.5 text-sm text-cyan-300 hover:bg-cyan-900"
+        class="rounded-lg bg-accent/20 px-3 py-1.5 text-sm text-accent hover:bg-accent/30"
         onclick={openCreateTokenModal}
       >
         Create Join Token
       </button>
       <button
-        class="rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700"
+        class="rounded-lg bg-card-hover px-3 py-1.5 text-sm text-text-primary hover:bg-border"
         onclick={loadData}
       >
         Refresh
@@ -284,11 +290,11 @@
       type="text"
       bind:value={searchQuery}
       placeholder="Search agents..."
-      class="flex-1 rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-100 placeholder-zinc-500"
+      class="flex-1 rounded border border-border bg-card px-3 py-1.5 text-sm text-text-primary placeholder-text-secondary"
     />
     <select
       bind:value={statusFilter}
-      class="rounded border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-100"
+      class="rounded border border-border bg-card px-3 py-1.5 text-sm text-text-primary"
     >
       <option value="all">All</option>
       <option value="enabled">Enabled</option>
@@ -299,10 +305,10 @@
 
   <!-- Bulk actions -->
   {#if someSelected}
-    <div class="flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-900/80 px-4 py-2">
-      <span class="text-sm text-zinc-400">{selectedLabels.size} selected</span>
+    <div class="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-2">
+      <span class="text-sm text-text-secondary">{selectedLabels.size} selected</span>
       {#if bulkProgress}
-        <span class="text-sm text-amber-400">{bulkProgress}</span>
+        <span class="text-sm text-warning">{bulkProgress}</span>
       {:else}
         <button
           class="rounded-lg bg-emerald-900/50 px-3 py-1 text-sm text-emerald-300 hover:bg-emerald-900 disabled:opacity-50"
@@ -329,13 +335,13 @@
   {/if}
 
   {#if loading}
-    <div class="py-12 text-center text-zinc-500">Loading agents...</div>
+    <div class="py-12 text-center text-text-secondary">Loading agents...</div>
   {:else if agents.length === 0}
-    <div class="py-12 text-center text-zinc-500">
-      No agents registered. Use <code class="rounded bg-zinc-800 px-1.5 py-0.5">shell enroll</code> to add one.
+    <div class="py-12 text-center text-text-secondary">
+      No agents registered. Use <code class="rounded bg-card px-1.5 py-0.5">shell enroll</code> to add one.
     </div>
   {:else if filteredAgents.length === 0}
-    <div class="py-12 text-center text-zinc-500">No agents match the current filter.</div>
+    <div class="py-12 text-center text-text-secondary">No agents match the current filter.</div>
   {:else}
     <!-- Select All -->
     <div class="flex items-center gap-2 px-1">
@@ -343,36 +349,36 @@
         type="checkbox"
         checked={allSelected}
         onchange={toggleSelectAll}
-        class="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-cyan-500"
+        class="h-4 w-4 rounded border-border bg-card text-accent"
       />
-      <span class="text-xs text-zinc-500">Select All</span>
+      <span class="text-xs text-text-secondary">Select All</span>
     </div>
 
     <div class="grid gap-3">
       {#each filteredAgents as agent}
         {@const enabled = isEnabled(agent)}
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div class="rounded-xl border border-border bg-card p-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
               <input
                 type="checkbox"
                 checked={selectedLabels.has(agent.label)}
                 onchange={() => toggleSelect(agent.label)}
-                class="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-cyan-500"
+                class="h-4 w-4 rounded border-border bg-surface text-accent"
               />
-              <div class="h-2.5 w-2.5 rounded-full {enabled ? 'bg-emerald-400' : agent.revoked ? 'bg-red-400' : 'bg-zinc-600'}"></div>
-              <span class="font-mono text-sm font-medium text-zinc-100">{agent.label}</span>
+              <div class="h-2.5 w-2.5 rounded-full {enabled ? 'bg-success' : agent.revoked ? 'bg-error' : 'bg-border'}"></div>
+              <span class="font-mono text-sm font-medium text-text-primary">{agent.label}</span>
               {#if agent.revoked}
                 <span class="rounded bg-red-900/50 px-2 py-0.5 text-xs text-red-300">Revoked</span>
               {/if}
             </div>
             <div class="flex items-center gap-2">
               {#if enabled}
-                <span class="text-xs text-emerald-400">
+                <span class="text-xs text-success">
                   {formatTimeRemaining(agent.shellEnabledUntil)} remaining
                 </span>
                 <button
-                  class="rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700"
+                  class="rounded-lg bg-card-hover px-3 py-1.5 text-sm text-text-primary hover:bg-border"
                   onclick={() => handleConnect(agent.label)}
                 >
                   Connect
@@ -402,8 +408,8 @@
             </div>
           </div>
           {#if agent.shellPolicy}
-            <div class="mt-2 text-xs text-zinc-500">
-              Policy: <span class="text-zinc-400">{agent.shellPolicy}</span>
+            <div class="mt-2 text-xs text-text-secondary">
+              Policy: <span class="text-text-primary">{agent.shellPolicy}</span>
             </div>
           {/if}
         </div>
@@ -417,26 +423,26 @@
     <form class="space-y-4" onsubmit={(e) => { e.preventDefault(); handleEnable(); }}>
       {#if enableTarget}
         <div>
-          <label class="mb-1 block text-sm text-zinc-400" for="enable-agent">Agent</label>
+          <label class="mb-1 block text-sm text-text-secondary" for="enable-agent">Agent</label>
           <input
             id="enable-agent"
             type="text"
             readonly
             value={enableTarget}
-            class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 font-mono text-sm text-zinc-300"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-sm text-text-primary"
           />
         </div>
       {:else}
-        <div class="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-zinc-300">
+        <div class="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-text-primary">
           Enabling {selectedLabels.size} agents: {[...selectedLabels].join(', ')}
         </div>
       {/if}
       <div>
-        <label class="mb-1 block text-sm text-zinc-400" for="enable-duration">Duration</label>
+        <label class="mb-1 block text-sm text-text-secondary" for="enable-duration">Duration</label>
         <select
           id="enable-duration"
           bind:value={enableDuration}
-          class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-300"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary"
         >
           {#each durations as d}
             <option value={d.value}>{d.label}</option>
@@ -444,11 +450,11 @@
         </select>
       </div>
       <div>
-        <label class="mb-1 block text-sm text-zinc-400" for="enable-policy">Policy (optional)</label>
+        <label class="mb-1 block text-sm text-text-secondary" for="enable-policy">Policy (optional)</label>
         <select
           id="enable-policy"
           bind:value={enablePolicy}
-          class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-300"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary"
         >
           <option value="">Default</option>
           {#each policies as p}
@@ -459,7 +465,7 @@
       <div class="flex justify-end gap-3 pt-2">
         <button
           type="button"
-          class="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
+          class="rounded-lg bg-card-hover px-4 py-2 text-sm text-text-primary hover:bg-border"
           onclick={() => (showEnableModal = false)}
         >
           Cancel
@@ -480,7 +486,7 @@
   <Modal title="Create Join Token" onclose={() => (showCreateTokenModal = false)}>
     <form class="space-y-4" onsubmit={(e) => { e.preventDefault(); handleCreateJoinToken(); }}>
       <div>
-        <label class="mb-1 block text-sm text-zinc-400" for="token-label">Agent Label</label>
+        <label class="mb-1 block text-sm text-text-secondary" for="token-label">Agent Label</label>
         <input
           id="token-label"
           type="text"
@@ -488,14 +494,14 @@
           required
           pattern="[a-z0-9\-]+"
           placeholder="my-agent"
-          class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 font-mono text-sm text-zinc-300"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-sm text-text-primary"
         />
-        <p class="mt-1 text-xs text-zinc-500">Lowercase letters, digits, and hyphens only.</p>
+        <p class="mt-1 text-xs text-text-secondary">Lowercase letters, digits, and hyphens only.</p>
       </div>
       <div class="flex justify-end gap-3 pt-2">
         <button
           type="button"
-          class="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
+          class="rounded-lg bg-card-hover px-4 py-2 text-sm text-text-primary hover:bg-border"
           onclick={() => (showCreateTokenModal = false)}
         >
           Cancel
@@ -503,7 +509,7 @@
         <button
           type="submit"
           disabled={tokenLoading}
-          class="rounded-lg bg-cyan-700 px-4 py-2 text-sm text-white hover:bg-cyan-600 disabled:opacity-50"
+          class="rounded-lg bg-accent px-4 py-2 text-sm text-surface hover:bg-accent-dim disabled:opacity-50"
         >
           {tokenLoading ? 'Creating...' : 'Create'}
         </button>
@@ -515,7 +521,7 @@
 {#if showTokenModal}
   <Modal title="Join Token Created" onclose={() => (showTokenModal = false)}>
     <div class="space-y-4">
-      <p class="text-sm text-zinc-400">
+      <p class="text-sm text-text-secondary">
         Use this token to enroll a new agent. The token is single-use.
       </p>
       <div class="flex items-center gap-2">
@@ -524,24 +530,24 @@
           type="text"
           readonly
           value={joinToken}
-          class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 font-mono text-sm text-zinc-300"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-sm text-text-primary"
         />
         <button
-          class="shrink-0 rounded-lg bg-cyan-900/50 px-3 py-2 text-sm text-cyan-300 hover:bg-cyan-900"
+          class="shrink-0 rounded-lg bg-accent/20 px-3 py-2 text-sm text-accent hover:bg-accent/30"
           onclick={copyToken}
         >
           {tokenCopied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <div class="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3">
-        <p class="text-xs text-zinc-500">Usage:</p>
-        <code class="mt-1 block text-xs text-zinc-300">
+      <div class="rounded-lg border border-border bg-surface px-4 py-3">
+        <p class="text-xs text-text-secondary">Usage:</p>
+        <code class="mt-1 block text-xs text-text-primary">
           shell-agent enroll --server &lt;url&gt; --token {joinToken}
         </code>
       </div>
       <div class="flex justify-end pt-2">
         <button
-          class="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
+          class="rounded-lg bg-card-hover px-4 py-2 text-sm text-text-primary hover:bg-border"
           onclick={() => (showTokenModal = false)}
         >
           Close
@@ -552,25 +558,22 @@
 {/if}
 
 {#if showRevokeModal}
-  <Modal title="Revoke Agent" onclose={() => (showRevokeModal = false)}>
-    <p class="text-sm text-zinc-300">
-      Are you sure you want to revoke agent <strong class="font-mono">{revokeTarget}</strong>?
-      This will permanently invalidate the agent's certificate. This cannot be undone.
-    </p>
-    <div class="mt-6 flex justify-end gap-3">
-      <button
-        class="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
-        onclick={() => (showRevokeModal = false)}
-      >
-        Cancel
-      </button>
-      <button
-        class="rounded-lg bg-red-700 px-4 py-2 text-sm text-white hover:bg-red-600 disabled:opacity-50"
-        onclick={handleRevoke}
-        disabled={revokeLoading}
-      >
-        {revokeLoading ? 'Revoking...' : 'Revoke'}
-      </button>
-    </div>
-  </Modal>
+  <ConfirmModal
+    title="Revoke Agent"
+    confirmLabel={revokeLoading ? 'Revoking...' : 'Revoke'}
+    loading={revokeLoading}
+    onconfirm={handleRevoke}
+    onclose={() => (showRevokeModal = false)}
+  >
+    Are you sure you want to revoke agent <strong class="font-mono">{revokeTarget}</strong>?
+    This will permanently invalidate the agent's certificate. This cannot be undone.
+  </ConfirmModal>
+{/if}
+
+{#if showDesktopActionModal}
+  <DesktopActionModal
+    title={desktopActionTitle}
+    command={desktopActionCommand}
+    onclose={() => (showDesktopActionModal = false)}
+  />
 {/if}
